@@ -1,3 +1,4 @@
+```mermaid
 graph TD
     A[Kamar Hotel: Sensor Suhu, PIR, Pintu] -->|Membaca Data| B(Edge Node: ESP8266)
     B -->|Publish MQTT via Wi-Fi| C{Mosquitto Broker<br>Ubuntu: 192.168.1.23}
