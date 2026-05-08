@@ -1,9 +1,28 @@
 ```mermaid
-graph TD
-    A[Kamar Hotel: Sensor Suhu, PIR, Pintu] -->|Membaca Data| B(Edge Node: ESP8266)
-    B -->|Publish MQTT via Wi-Fi| C{Mosquitto Broker<br>Ubuntu: 192.168.1.23}
-    C -->|Subscribe Topik| D[Apache Spark<br>Big Data Processing]
-    D -->|Simpan Data Bersih| E[(InfluxDB<br>Time-Series Database)]
-    E -->|Query Data| F[Grafana<br>Dashboard Visualisasi]
-    G[Dosen / User] -->|Akses Web: 30080| H[Nginx Web Server<br>Portal Utama]
-    H -.->|Klik Tombol Shortcut| F
+flowchart TD
+    A([Mulai: Sensor Membaca Data Kamar]) --> B{Apakah Tombol DND Aktif?}
+    
+    %% Alur DND (Prioritas Utama)
+    B -- Ya --> C[Sistem Mengunci Status Privasi]
+    C --> D[Abaikan Semua Notif Housekeeping]
+    
+    %% Alur MUR & PIR (Housekeeping)
+    B -- Tidak --> E{Apakah Tombol MUR Aktif?}
+    E -- Ya --> F{Apakah Kamar Kosong? <br> Sensor PIR = 0}
+    
+    F -- Ya --> G[Update Dashboard Lobi: <br> 'Kamar Siap Dibersihkan']
+    F -- Tidak --> H[Pending: Tunggu Hingga Tamu Keluar]
+    
+    %% Alur Pengiriman Data IoT
+    E -- Tidak --> I[Bungkus Data Lingkungan & Status <br> ke Format JSON]
+    H --> I
+    D --> I
+    G --> I
+    
+    I --> J[ESP8266 Publish Data via Wi-Fi]
+    J --> K{Mosquitto MQTT Broker}
+    K --> L[Apache Spark: Filter & Analisis Big Data]
+    L --> M[(InfluxDB: Simpan Time-Series)]
+    M --> N[Visualisasi di Grafana & Portal Nginx]
+    
+    N --> O([Looping: Kembali Baca Sensor])
